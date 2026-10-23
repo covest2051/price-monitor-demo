@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Мониторинг цен</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="topbar">
+    <h1>Мониторинг цен</h1>
+    <form th:action="@{/logout}" method="post">
+        <button class="link" type="submit">Выйти</button>
+    </form>
+</div>
+
+<div class="container">
+    <div class="flash ok" th:if="${message}" th:text="${message}"></div>
+    <div class="flash error" th:if="${error}" th:text="${error}"></div>
+    <div class="flash ok" th:if="${running}">Идёт проверка цен…</div>
+
+    <div class="cards">
+        <div class="card"><div class="value" th:text="${rows.size()}">0</div><div class="label">товаров отслеживается</div></div>
+        <div class="card"><div class="value" th:text="${changedCount}">0</div><div class="label">цена изменилась</div></div>
+        <div class="card"><div class="value" th:text="${outOfStockCount}">0</div><div class="label">нет в наличии</div></div>
+        <div class="card"><div class="value" th:text="${errorCount}">0</div><div class="label">ошибки сбора</div></div>
+    </div>
+
+    <div class="panel">
+        <form th:action="@{/products}" method="post" class="row">
+            <div class="grow">
+                <input type="url" name="url" required placeholder="Ссылка на страницу товара"
+                       th:value="${url}">
+            </div>
+            <button type="submit">Добавить</button>
+        </form>
+        <div class="hint">
+            Поддерживаемые сайты:
+            <span th:each="site, it : ${sites}"><span th:text="${site.name}"></span><span th:unless="${it.last}">, </span></span>.
+            Новый сайт подключается настройкой профиля, без изменения кода.
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="row" style="margin-bottom: 8px">
+            <div class="grow"></div>
+            <form th:action="@{/check-all}" method="post"><button class="secondary" type="submit">Проверить все</button></form>
+            <a class="button secondary" th:href="@{/export.xlsx}">Скачать Excel</a>
+        </div>
+        <table>
+            <thead>
+            <tr>
+                <th>Товар</th>
+                <th class="num">Цена</th>
+                <th class="num">Изменение</th>
+                <th>Наличие</th>
+                <th class="hide-mobile">Проверено</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="row : ${rows}">
+                <td>
+                    <a class="product-name" th:href="@{/products/{id}(id=${row.product.id})}"
+                       th:text="${row.product.displayName}"></a>
+                    <div class="site" th:text="${row.siteName}"></div>
+                    <div class="error-text" th:if="${row.lastError}" th:text="${row.lastError}"></div>
+                </td>
+                <td class="num" th:text="${view.money(row.price)}"></td>
+                <td class="num">
+                    <span th:if="${row.change != null and row.change.signum() != 0}"
+                          th:classappend="${row.change.signum() > 0} ? 'up' : 'down'">
+                        <span th:text="${view.signedMoney(row.change)}"></span>
+                        (<span th:text="${view.signedPercent(row.changePercent)}"></span>)
+                    </span>
+                    <span class="site" th:if="${row.change != null and row.change.signum() == 0}">без изменений</span>
+                </td>
+                <td>
+                    <span class="badge err" th:if="${row.lastError}">ошибка</span>
+                    <span th:unless="${row.lastError}">
+                        <span class="badge in" th:if="${row.available == true}">в наличии</span>
+                        <span class="badge out" th:if="${row.available == false}">нет в наличии</span>
+                    </span>
+                </td>
+                <td class="hide-mobile" th:text="${view.dateTime(row.lastCheckedAt)}"></td>
+                <td>
+                    <form th:action="@{/products/{id}/delete(id=${row.product.id})}" method="post"
+                          onsubmit="return confirm('Удалить товар из мониторинга вместе с историей?')">
+                        <button class="link" type="submit">удалить</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${rows.isEmpty()}">
+                <td colspan="6" class="site">Пока ничего не отслеживается — добавьте ссылку на товар выше.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

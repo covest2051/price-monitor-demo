@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Демо-магазин</title>
+    <style>body { font-family: Arial, sans-serif; margin: 40px; } li { margin: 8px 0; }</style>
+</head>
+<body>
+<h1>Демо-магазин</h1>
+<ul>
+    <li th:each="offer : ${offers}">
+        <a th:href="@{/demo-shop/products/{id}(id=${offer.item.id})}" th:text="${offer.item.name}"></a>
+        — <span th:text="${fmt.price(offer.price)}"></span>
+        <span th:unless="${offer.available}">(нет в наличии)</span>
+    </li>
+</ul>
+</body>
+</html>

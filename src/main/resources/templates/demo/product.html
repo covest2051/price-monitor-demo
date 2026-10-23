@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${offer.item.name} + ' — Демо-магазин'">Товар</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; color: #222; }
+        .note { color: #888; font-size: 12px; margin-bottom: 24px; }
+        .product-price { font-size: 28px; font-weight: bold; margin: 12px 0; }
+        .product-stock { font-size: 16px; }
+    </style>
+</head>
+<body>
+<div class="note">Демо-магазин для проверки парсера. Цены меняются раз в несколько дней.</div>
+<h1 class="product-title" th:text="${offer.item.name}"></h1>
+<div class="product-price" th:text="${fmt.price(offer.price)}"></div>
+<!-- Когда товара нет, блок наличия выводится с другим текстом -->
+<div class="product-stock" th:text="${offer.available} ? 'В наличии' : 'Нет в наличии'"></div>
+<p><a th:href="@{/demo-shop}">Все товары</a></p>
+</body>
+</html>

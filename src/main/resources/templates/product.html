@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${row.product.displayName}">Товар</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="topbar">
+    <h1><a th:href="@{/}">Мониторинг цен</a></h1>
+    <form th:action="@{/logout}" method="post">
+        <button class="link" type="submit">Выйти</button>
+    </form>
+</div>
+
+<div class="container">
+    <div class="flash ok" th:if="${message}" th:text="${message}"></div>
+
+    <div class="panel">
+        <div class="row">
+            <div class="grow">
+                <h2 style="margin: 0 0 4px" th:text="${row.product.displayName}"></h2>
+                <div class="site">
+                    <span th:text="${row.siteName}"></span> ·
+                    <a th:href="${row.product.url}" target="_blank" rel="noopener">открыть на сайте</a>
+                </div>
+            </div>
+            <form th:action="@{/products/{id}/check(id=${row.product.id})}" method="post">
+                <button class="secondary" type="submit">Проверить сейчас</button>
+            </form>
+        </div>
+        <div class="row" style="margin-top: 16px; gap: 24px">
+            <div>
+                <div class="price-big" th:text="${view.money(row.price)}"></div>
+                <span th:if="${row.change != null and row.change.signum() != 0}"
+                      th:classappend="${row.change.signum() > 0} ? 'up' : 'down'"
+                      th:text="${view.signedMoney(row.change) + ' (' + view.signedPercent(row.changePercent) + ') к прошлой проверке'}"></span>
+            </div>
+            <div>
+                <span class="badge in" th:if="${row.available == true}">в наличии</span>
+                <span class="badge out" th:if="${row.available == false}">нет в наличии</span>
+                <div class="site" style="margin-top: 6px" th:text="'Проверено: ' + ${view.dateTime(row.lastCheckedAt)}"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel" th:if="${chartPrices.size() > 1}">
+        <h3 style="margin-top: 0" th:text="'Цена за ' + ${historyDays} + ' дней'"></h3>
+        <canvas id="chart" height="90"></canvas>
+    </div>
+
+    <div class="panel">
+        <h3 style="margin-top: 0">История проверок</h3>
+        <table>
+            <thead>
+            <tr><th>Проверено</th><th class="num">Цена</th><th>Наличие</th><th>Результат</th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="check : ${history}">
+                <td th:text="${view.dateTime(check.checkedAt)}"></td>
+                <td class="num" th:text="${check.ok} ? ${view.money(check.price)} : ''"></td>
+                <td>
+                    <span th:if="${check.ok}">
+                        <span class="badge in" th:if="${check.available}">в наличии</span>
+                        <span class="badge out" th:unless="${check.available}">нет в наличии</span>
+                    </span>
+                </td>
+                <td>
+                    <span th:if="${check.ok}" class="site">ok</span>
+                    <span th:unless="${check.ok}" class="error-text" th:text="${check.error}"></span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script th:inline="javascript" th:if="${chartPrices.size() > 1}">
+    const labels = /*[[${chartLabels}]]*/ [];
+    const prices = /*[[${chartPrices}]]*/ [];
+    new Chart(document.getElementById('chart'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{data: prices, borderColor: '#2f6fed', backgroundColor: 'rgba(47,111,237,.08)',
+                fill: true, pointRadius: 2, stepped: 'before'}]
+        },
+        options: {plugins: {legend: {display: false}}, scales: {y: {ticks: {precision: 0}}}}
+    });
+</script>
+</body>
+</html>

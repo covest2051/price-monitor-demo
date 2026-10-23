@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: price-monitor-demo
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/prices}
+    username: ${DB_USER:prices}
+    password: ${DB_PASSWORD:prices}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+server:
+  port: ${PORT:8080}
+
+monitor:
+  zone: Europe/Minsk
+  # Плановая проверка: каждый день в 09:00. "-" отключает расписание.
+  schedule: ${MONITOR_SCHEDULE:0 0 9 * * *}
+  request-timeout: 10s
+  # Пауза между запросами, чтобы не создавать нагрузку на сайты
+  delay-between-requests: 1s
+  user-agent: "Mozilla/5.0 (compatible; PriceMonitorDemo/1.0; +https://github.com/covest2051)"
+  history-days: 30
+  demo-mode: ${DEMO_MODE:true}
+  demo-base-url: ${DEMO_BASE_URL:http://localhost:8080}
+  admin-username: ${ADMIN_USERNAME:admin}
+  admin-password: ${ADMIN_PASSWORD:}
+  # Профили сайтов: по каким CSS-селекторам на странице товара лежат название, цена и наличие.
+  sites:
+    - code: demo
+      host: localhost
+      name: "Демо-магазин"
+      name-selector: "h1.product-title"
+      price-selector: ".product-price"
+      availability-selector: ".product-stock"
+      # Регулярное выражение; ^ обязателен, иначе "В наличии" найдётся и внутри "Нет в наличии"
+      in-stock-pattern: "^В наличии"
+    - code: books
+      host: books.toscrape.com
+      name: "Books to Scrape"
+      name-selector: "div.product_main h1"
+      price-selector: "div.product_main p.price_color"
+      availability-selector: "div.product_main p.availability"
+      in-stock-pattern: "In stock"
+
+logging:
+  level:
+    # Под нагрузкой Jsoup на каждый 404 не должен засорять лог стектрейсами — ошибки пишутся в историю проверок.
+    org.jsoup: warn

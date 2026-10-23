@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Вход — Мониторинг цен</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<form class="login" th:action="@{/login}" method="post">
+    <h1>Мониторинг цен</h1>
+    <div class="flash error" th:if="${param.error}">Неверный логин или пароль</div>
+    <div class="flash ok" th:if="${param.logout}">Вы вышли из кабинета</div>
+    <label for="username">Логин</label>
+    <input type="text" id="username" name="username" autofocus>
+    <label for="password">Пароль</label>
+    <input type="password" id="password" name="password">
+    <button type="submit">Войти</button>
+</form>
+</body>
+</html>
