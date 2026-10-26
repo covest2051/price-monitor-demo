@@ -1,0 +1,63 @@
+# Прайсы поставщиков: профили и справочник брендов.
+# Новый поставщик = новый профиль здесь, код менять не нужно.
+pricelist:
+  # Ставка НДС, по которой цены поставщиков "без НДС" пересчитываются в цены с НДС
+  vat-percent: 20
+
+  # Как разные поставщики пишут один и тот же бренд. Бренды из списка ищутся и в названии,
+  # если у поставщика нет отдельной колонки бренда ("Фильтр масляный MANN W712/75").
+  brands:
+    - { name: MANN-FILTER, aliases: [MANN, MANN FILTER] }
+    - { name: KNECHT, aliases: [MAHLE, KNECHT/MAHLE] }
+    - { name: FEBI, aliases: [FEBI BILSTEIN] }
+    - { name: LEMFORDER, aliases: [LEMFÖRDER] }
+    - { name: CONTITECH, aliases: [CONTINENTAL CONTITECH] }
+    - { name: BOSCH, aliases: [Бош] }
+    - { name: NGK }
+    - { name: TRW }
+    - { name: SACHS }
+    - { name: LUK }
+    - { name: GATES }
+    - { name: FILTRON }
+    - { name: CASTROL }
+    - { name: MOBIL }
+    - { name: SKF }
+    - { name: BREMBO }
+    - { name: ATE }
+
+  suppliers:
+    # Excel: реквизиты сверху, заголовок не в первой строке, группы товаров объединёнными ячейками
+    - code: avtodetal
+      name: "Автодеталь-Опт"
+      file-pattern: "(?i)avtodetal.*\\.xlsx?"
+      format: EXCEL
+      prices-with-vat: true
+      columns:
+        article: ["Артикул"]
+        brand: ["Производитель"]
+        name: ["Наименование"]
+        price: ["Цена, руб."]
+        stock: ["Наличие"]
+
+    # CSV из 1С: Windows-1251, точка с запятой, цены без НДС, бренд только в названии, остаток числом
+    - code: partsline
+      name: "ПартсЛайн"
+      file-pattern: "(?i)partsline.*\\.csv"
+      format: CSV
+      charset: windows-1251
+      delimiter: ";"
+      prices-with-vat: false
+      columns:
+        article: ["Код"]
+        name: ["Номенклатура"]
+        price: ["Цена без НДС, руб."]
+        stock: ["Остаток"]
+
+    # PDF с текстовым слоем: одна позиция в строке "артикул бренд наименование цена наличие"
+    - code: tehnodetal
+      name: "ТехноДеталь"
+      file-pattern: "(?i)tehnodetal.*\\.pdf"
+      format: PDF
+      prices-with-vat: true
+      line-pattern: "^(?<article>[A-Za-z0-9][A-Za-z0-9./-]*)\\s+(?<brand>\\S+)\\s+(?<name>.+?)\\s+(?<price>\\d[\\d ]*[.,]\\d{2})\\s+(?<stock>\\S.*)$"
+      skip-pattern: "^(Артикул|Страница|Цены )"

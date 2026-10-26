@@ -33,6 +33,7 @@ a:hover { text-decoration: underline; }
 }
 
 .topbar h1 { margin: 0; font-size: 18px; }
+.nav { display: flex; align-items: baseline; gap: 20px; }
 
 .container { max-width: 1200px; margin: 0 auto; padding: 20px 24px 40px; }
 
@@ -44,6 +45,8 @@ a:hover { text-decoration: underline; }
     border-radius: 10px;
     padding: 14px 16px;
 }
+
+.cards.six { grid-template-columns: repeat(6, 1fr); }
 
 .card .value { font-size: 24px; font-weight: 600; }
 .card .label { color: var(--muted); margin-top: 2px; }
@@ -108,6 +111,13 @@ tr:last-child td { border-bottom: none; }
 
 .error-text { color: var(--up); font-size: 12px; max-width: 280px; }
 
+.panel h2 { margin: 0 0 12px; font-size: 16px; }
+.scroll { overflow-x: auto; }
+td.best { background: #e6f6ec; }
+.muted { color: var(--muted); }
+.upload { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+.upload label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); }
+
 .price-big { font-size: 28px; font-weight: 600; }
 
 .login {
@@ -124,6 +134,6 @@ tr:last-child td { border-bottom: none; }
 .login button { width: 100%; margin-top: 16px; }
 
 @media (max-width: 800px) {
-    .cards { grid-template-columns: repeat(2, 1fr); }
+    .cards, .cards.six { grid-template-columns: repeat(2, 1fr); }
     .hide-mobile { display: none; }
 }

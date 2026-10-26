@@ -8,7 +8,10 @@
 </head>
 <body>
 <div class="topbar">
-    <h1>Мониторинг цен</h1>
+    <div class="nav">
+        <h1>Мониторинг цен</h1>
+        <a th:href="@{/pricelists}">Прайсы поставщиков</a>
+    </div>
     <form th:action="@{/logout}" method="post">
         <button class="link" type="submit">Выйти</button>
     </form>

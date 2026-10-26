@@ -1,6 +1,12 @@
 spring:
   application:
     name: price-monitor-demo
+  config:
+    import: classpath:pricelist.yml
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 60MB
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/prices}
     username: ${DB_USER:prices}

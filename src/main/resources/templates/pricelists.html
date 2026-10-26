@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Прайсы поставщиков</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="topbar">
+    <div class="nav">
+        <h1>Прайсы поставщиков</h1>
+        <a th:href="@{/}">Цены конкурентов</a>
+    </div>
+    <form th:action="@{/logout}" method="post">
+        <button class="link" type="submit">Выйти</button>
+    </form>
+</div>
+
+<div class="container">
+    <div class="panel">
+        <div class="row">
+            <div class="grow">
+                <b>Пример:</b> три поставщика автозапчастей присылают прайсы каждую неделю, каждый в своём виде.
+                Ниже — единый каталог по прайсам за 27.10 и отчёт, что изменилось с 20.10.
+                <div class="hint">
+                    Исходные файлы:
+                    <span th:each="file, it : ${currentFiles}"><a th:href="@{/pricelists/samples/current/{name}(name=${file.name})}"
+                            th:text="${file.name}"></a><span th:unless="${it.last}">, </span></span>
+                    · прошлая неделя:
+                    <span th:each="file, it : ${previousFiles}"><a th:href="@{/pricelists/samples/previous/{name}(name=${file.name})}"
+                            th:text="${file.name}"></a><span th:unless="${it.last}">, </span></span>
+                </div>
+            </div>
+            <a class="button" th:href="@{/pricelists/demo.xlsx}">Скачать отчёт в Excel</a>
+        </div>
+    </div>
+
+    <div class="cards six">
+        <div class="card"><div class="value" th:text="${report.catalog.size()}">0</div><div class="label">товаров в каталоге</div></div>
+        <div class="card"><div class="value" th:text="${report.itemsAtSeveralSuppliers()}">0</div><div class="label">есть у 2–3 поставщиков</div></div>
+        <div class="card"><div class="value up" th:text="${report.count(T(dev.pricemonitor.pricelist.Change.Type).PRICE_UP)}">0</div><div class="label">подорожало</div></div>
+        <div class="card"><div class="value down" th:text="${report.count(T(dev.pricemonitor.pricelist.Change.Type).PRICE_DOWN)}">0</div><div class="label">подешевело</div></div>
+        <div class="card"><div class="value" th:text="${report.count(T(dev.pricemonitor.pricelist.Change.Type).OUT_OF_STOCK)}">0</div><div class="label">закончилось</div></div>
+        <div class="card"><div class="value" th:text="${report.problems.size()}">0</div><div class="label">строк на проверку</div></div>
+    </div>
+
+    <div class="panel">
+        <h2>Поставщики</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Поставщик</th>
+                <th>Файл</th>
+                <th>Формат</th>
+                <th class="num">Позиций</th>
+                <th class="num">На проверку</th>
+                <th>Цены</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="summary : ${report.summaries}">
+                <td th:text="${summary.supplier.name}"></td>
+                <td>
+                    <span th:text="${summary.fileName}"></span>
+                    <div class="site" th:if="${summary.previousFileName}">сравнение с <span th:text="${summary.previousFileName}"></span></div>
+                </td>
+                <td th:text="${summary.supplier.format}"></td>
+                <td class="num" th:text="${summary.offers}"></td>
+                <td class="num" th:text="${summary.problems}"></td>
+                <td th:text="${summary.supplier.pricesWithVat} ? 'с НДС' : 'без НДС, пересчитаны с НДС'"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="panel">
+        <h2>Единый каталог</h2>
+        <div class="hint" style="margin: -4px 0 8px">Цены с НДС. Зелёным — лучшая цена среди тех, у кого товар в наличии.</div>
+        <div class="scroll">
+            <table>
+                <thead>
+                <tr>
+                    <th>Товар</th>
+                    <th class="num" th:each="supplier : ${report.suppliers}" th:text="${supplier.name}"></th>
+                    <th class="num">Разброс</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${report.catalog}">
+                    <td>
+                        <span class="product-name" th:text="${item.brand + ' ' + item.article}"></span>
+                        <div class="site" th:text="${item.name}"></div>
+                    </td>
+                    <td class="num" th:each="supplier : ${report.suppliers}"
+                        th:with="offer=${item.offer(supplier.code)}"
+                        th:classappend="${offer != null and item.isBest(offer)} ? 'best'">
+                        <th:block th:if="${offer}">
+                            <span th:text="${view.money(offer.price)}"
+                                  th:classappend="${!offer.stock.inStock()} ? 'muted'"></span>
+                            <div>
+                                <span class="badge in" th:if="${offer.stock.status.name() == 'IN_STOCK'}" th:text="${offer.stock.text}"></span>
+                                <span class="badge out" th:if="${offer.stock.status.name() == 'ON_ORDER'}">под заказ</span>
+                                <span class="badge err" th:if="${offer.stock.status.name() == 'OUT_OF_STOCK'}">нет</span>
+                                <span class="site" th:if="${offer.stock.status.name() == 'UNKNOWN'}" th:text="${offer.stock.text}"></span>
+                            </div>
+                        </th:block>
+                        <span class="site" th:unless="${offer}">—</span>
+                    </td>
+                    <td class="num" th:text="${item.spread() != null ? view.money(item.spread()) : ''}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Что изменилось с прошлой недели</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Что</th>
+                <th>Товар</th>
+                <th>Поставщик</th>
+                <th class="num">Было</th>
+                <th class="num">Стало</th>
+                <th class="num">Изменение</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="change : ${report.changes}">
+                <td th:text="${change.type.title()}"></td>
+                <td>
+                    <span class="product-name" th:text="${change.brand + ' ' + change.article}"></span>
+                    <div class="site" th:text="${change.name}"></div>
+                </td>
+                <td th:text="${change.supplierName}"></td>
+                <td class="num">
+                    <span th:if="${change.oldPrice}" th:text="${view.money(change.oldPrice)}"></span>
+                    <div class="site" th:if="${change.oldStock}" th:text="${change.oldStock.text}"></div>
+                </td>
+                <td class="num">
+                    <span th:if="${change.newPrice}" th:text="${view.money(change.newPrice)}"></span>
+                    <div class="site" th:if="${change.newStock}" th:text="${change.newStock.text}"></div>
+                </td>
+                <td class="num">
+                    <span th:if="${change.diff() != null and change.diff().signum() != 0}"
+                          th:classappend="${change.diff().signum() > 0} ? 'up' : 'down'">
+                        <span th:text="${view.signedMoney(change.diff())}"></span>
+                        (<span th:text="${view.signedPercent(change.percent())}"></span>)
+                    </span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="panel">
+        <h2>Строки, которые нужно проверить</h2>
+        <div class="hint" style="margin: -4px 0 8px">Ничего не теряется молча: всё, что не удалось взять в каталог, видно здесь с номером строки в файле поставщика.</div>
+        <table>
+            <thead>
+            <tr>
+                <th>Поставщик</th>
+                <th>Строка</th>
+                <th>Что не так</th>
+                <th class="hide-mobile">Содержимое</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="problem : ${report.problems}">
+                <td th:text="${problem.supplierName}"></td>
+                <td class="num" th:text="${problem.line}"></td>
+                <td th:text="${problem.reason}"></td>
+                <td class="hide-mobile site" th:text="${problem.content}"></td>
+            </tr>
+            <tr th:if="${report.problems.isEmpty()}">
+                <td colspan="4" class="site">Все строки разобраны.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="panel">
+        <h2>Обработать свои прайсы</h2>
+        <form th:action="@{/pricelists}" method="post" enctype="multipart/form-data" class="upload">
+            <label>Прайсы этой недели <input type="file" name="current" multiple required></label>
+            <label>Прайсы прошлой недели (для отчёта изменений) <input type="file" name="previous" multiple></label>
+            <button type="submit">Получить Excel</button>
+        </form>
+        <div class="hint">Поставщик определяется по имени файла; новый поставщик подключается профилем в pricelist.yml, без изменения кода.</div>
+    </div>
+</div>
+</body>
+</html>
